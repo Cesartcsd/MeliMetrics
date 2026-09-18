@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-base: #0f131d;
+  --color-bg-surface: #131b2e;
+  --color-bg-elevated: #1a243d;
+  --color-border-subtle: #1e293d;
+  --color-text-main: #ffffff;
+  --color-text-muted: #94a3b8;
+  --color-accent-blue: #3b82f6;
+  --color-accent-blue-hover: #2563eb;
+  --color-status-green: #10b981;
+  --color-status-amber: #f59e0b;
+  --color-status-red: #ef4444;
+
+  --font-sans: var(--font-inter), sans-serif;
+  --font-heading: var(--font-space-grotesk), sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+}
+
+body {
+  @apply bg-bg-base text-text-main;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom Scrollbar for better dark UI */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-bg-base;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-border-subtle rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-text-muted;
+}
