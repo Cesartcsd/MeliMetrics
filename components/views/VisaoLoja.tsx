@@ -1,4 +1,3 @@
-'use client';
 import { useState, useEffect } from 'react';
 import { 
   Store, 
@@ -33,6 +32,8 @@ import {
 import { dashboardData } from '@/lib/mockData';
 import ModalMetas from '@/components/modals/ModalMetas';
 import { useMetas } from '@/lib/metasStore';
+import { exportToCSV } from '@/lib/exportUtils';
+import { getMesCalendarioInfo } from '@/lib/formatUtils';
 
 type StoreKey = 'DOCA' | 'STAR' | 'CASA' | 'THERM';
 
@@ -64,11 +65,14 @@ export default function VisaoLoja({ onNavigate, initialStoreKey = 'DOCA' }: Visa
     THERM: 37708.50,
   };
 
+  const { diasNoMes, diaAtual } = getMesCalendarioInfo();
   const storeMeta = metas[currentStoreKey] || 104000;
-  const metaDiaria = Math.round(storeMeta / 30);
+  const metaDiaria = Math.round(storeMeta / diasNoMes);
   const currentGMVNum = storeGMVValues[currentStoreKey] || 96000;
-  const percentAtingido = ((currentGMVNum / storeMeta) * 100).toFixed(1);
-  const projecaoFechamento = (currentGMVNum * 1.13).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const percentAtingido = storeMeta > 0 ? ((currentGMVNum / storeMeta) * 100).toFixed(1) : '0.0';
+  
+  // Projeção baseada em Run-Rate real dos dias transcorridos no mês
+  const projecaoFechamento = Math.round((currentGMVNum / Math.max(1, diaAtual)) * diasNoMes).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const vendasDiariasAjustadas = store.vendasDiarias.map(d => ({ ...d, meta: metaDiaria }));
 
   const showToast = (msg: string) => {
@@ -99,14 +103,7 @@ export default function VisaoLoja({ onNavigate, initialStoreKey = 'DOCA' }: Visa
       ['Cancelamentos Vendedor', store.termometro.cancelamentosVendedor.value],
       ['Despachos com Atraso', store.termometro.despachosAtraso.value],
     ];
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Relatorio_Loja_${store.id}_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportToCSV(`Relatorio_Loja_${store.id}_${new Date().toISOString().slice(0, 10)}`, headers, rows);
     showToast(`Relatório da conta ${store.id} exportado com sucesso!`);
   };
 

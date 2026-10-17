@@ -1,7 +1,7 @@
-'use client';
 import { useState } from 'react';
 import { Download, Filter, CheckCircle2, X, ExternalLink, ArrowRight, DollarSign, AlertTriangle, TrendingDown } from 'lucide-react';
 import { dashboardData } from '@/lib/mockData';
+import { exportToCSV } from '@/lib/exportUtils';
 
 interface MatrizSobeDesceProps {
   onNavigate?: (view: string) => void;
@@ -18,16 +18,9 @@ export default function MatrizSobeDesce({ onNavigate }: MatrizSobeDesceProps) {
   const handleExportCSV = () => {
     const headers = ['Produto', 'SKU', 'MLB', 'Conta', 'Impacto R$', 'Perda Diária', 'Visitas WoW', 'Visitas Abs', 'Vendas CR', 'Diagnostico', 'Motivo', 'Acao'];
     const rows = dashboardData.matriz.map(m => [
-      `"${m.name}"`, m.sku, m.mlb, m.account, `"${m.prejuizoEstimado}"`, `"${m.perdaDiaria}"`, m.visitasWoW, m.visitasValue, `"${m.vendasCR}"`, `"${m.diagnosis}"`, `"${m.reason}"`, `"${m.action}"`
+      m.name, m.sku, m.mlb, m.account, m.prejuizoEstimado, m.perdaDiaria, m.visitasWoW, m.visitasValue, m.vendasCR, m.diagnosis, m.reason, m.action
     ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'Matriz_Sobe_Desce_MeliMetrics.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportToCSV('Matriz_Sobe_Desce_MeliMetrics', headers, rows);
     showToast('Relatório da Matriz Sobe e Desce exportado com sucesso!');
   };
 

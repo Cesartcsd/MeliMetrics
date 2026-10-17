@@ -1,16 +1,18 @@
-'use client';
 import { useState } from 'react';
 import { Activity } from 'lucide-react';
 
 export default function Login({ onLogin }: { onLogin: () => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
+    if (email.trim() && password.trim()) {
       localStorage.setItem('melimetrics_auth', 'true');
       onLogin();
+    } else {
+      setError('Por favor, preencha o e-mail e a senha de acesso.');
     }
   };
 

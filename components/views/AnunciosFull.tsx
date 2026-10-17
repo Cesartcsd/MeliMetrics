@@ -1,4 +1,3 @@
-'use client';
 import { useState } from 'react';
 import { 
   Package, 
@@ -20,6 +19,7 @@ import {
   Flame
 } from 'lucide-react';
 import { dashboardData } from '@/lib/mockData';
+import { exportToCSV } from '@/lib/exportUtils';
 
 type TabFiltro = 'todos' | 'risco' | 'excesso' | 'pausados';
 
@@ -40,9 +40,9 @@ export default function AnunciosFull({ onNavigate }: AnunciosFullProps) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Modal Envio Full
+  // Modal Envio Full - Acesso seguro com guard clause
   const [modalEnvioOpen, setModalEnvioOpen] = useState(false);
-  const [envioSku, setEnvioSku] = useState(anunciosLista[0].sku);
+  const [envioSku, setEnvioSku] = useState(anunciosLista?.[0]?.sku || '');
   const [envioQtd, setEnvioQtd] = useState(150);
   const [envioCD, setEnvioCD] = useState('Louveira (SP)');
 
@@ -62,17 +62,10 @@ export default function AnunciosFull({ onNavigate }: AnunciosFullProps) {
   const handleExportCSV = () => {
     const headers = ['Produto', 'SKU', 'MLB', 'Conta', 'CD', 'Estoque Disp', 'Estoque Transito', 'Vendas/Dia', 'Cobertura (Dias)', 'Status'];
     const rows = filteredAnuncios.map(a => [
-      `"${a.name}"`, a.sku, a.mlb, a.conta, a.cd, a.estoqueDisp, a.estoqueTransito, a.vendasDia, a.coberturaDias, a.coberturaStatus
+      a.name, a.sku, a.mlb, a.conta, a.cd, a.estoqueDisp, a.estoqueTransito, a.vendasDia, a.coberturaDias, a.coberturaStatus
     ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Estoque_Full_MeliMetrics_${activeTab}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast('Relatório de estoque Full exportado em CSV!');
+    exportToCSV(`Estoque_Full_MeliMetrics_${activeTab}`, headers, rows);
+    showToast('Relatório de estoque Full exportado com sucesso!');
   };
 
   const handleConfirmEnvio = (e: React.FormEvent) => {

@@ -1,4 +1,3 @@
-'use client';
 import { useState } from 'react';
 import { 
   RefreshCw, 
@@ -167,8 +166,14 @@ export default function DashboardGeral({ onNavigate }: DashboardGeralProps) {
             <select
               value={selectedStore}
               onChange={(e) => {
-                setSelectedStore(e.target.value);
-                showToast(`Filtrado por: ${e.target.value}`);
+                const val = e.target.value;
+                setSelectedStore(val);
+                if (val !== 'Todas as Contas (4)' && onNavigate) {
+                  showToast(`Redirecionando para visão individual de ${val}...`);
+                  setTimeout(() => onNavigate('loja'), 350);
+                } else {
+                  showToast(`Exibindo consolidação: ${val}`);
+                }
               }}
               className="appearance-none bg-bg-surface border border-border-subtle text-xs text-text-main rounded-lg pl-8 pr-7 py-2 hover:bg-bg-elevated focus:outline-none focus:border-accent-blue cursor-pointer transition-colors font-medium"
             >
@@ -270,9 +275,9 @@ export default function DashboardGeral({ onNavigate }: DashboardGeralProps) {
               <span>
                 {periodo === 'mes' ? 'Meta do Mês: ' : 'Meta Mensal: '}
                 <strong className="text-text-main font-mono">
-                  R$ {(metas.global / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}k
+                  R$ {(Math.max(1, metas.global) / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}k
                 </strong>
-                {periodo === 'mes' && (
+                {periodo === 'mes' && metas.global > 0 && (
                   <span className="text-status-green ml-1.5 font-semibold text-[11px]">
                     ({((342850 / metas.global) * 100).toFixed(1)}%)
                   </span>

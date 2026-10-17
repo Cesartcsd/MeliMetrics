@@ -1,4 +1,3 @@
-'use client';
 import { useState, useEffect } from 'react';
 
 export interface MetasConfig {
@@ -26,11 +25,11 @@ export function getStoredMetas(): MetasConfig {
     if (!data) return DEFAULT_METAS;
     const parsed = JSON.parse(data);
     return {
-      global: Number(parsed.global) || DEFAULT_METAS.global,
-      DOCA: Number(parsed.DOCA) || DEFAULT_METAS.DOCA,
-      STAR: Number(parsed.STAR) || DEFAULT_METAS.STAR,
-      CASA: Number(parsed.CASA) || DEFAULT_METAS.CASA,
-      THERM: Number(parsed.THERM) || DEFAULT_METAS.THERM,
+      global: Math.max(1000, Number(parsed.global) || DEFAULT_METAS.global),
+      DOCA: Math.max(0, Number(parsed.DOCA) || DEFAULT_METAS.DOCA),
+      STAR: Math.max(0, Number(parsed.STAR) || DEFAULT_METAS.STAR),
+      CASA: Math.max(0, Number(parsed.CASA) || DEFAULT_METAS.CASA),
+      THERM: Math.max(0, Number(parsed.THERM) || DEFAULT_METAS.THERM),
     };
   } catch {
     return DEFAULT_METAS;
@@ -40,8 +39,15 @@ export function getStoredMetas(): MetasConfig {
 export function saveStoredMetas(newMetas: MetasConfig): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newMetas));
-    window.dispatchEvent(new CustomEvent('metas-updated', { detail: newMetas }));
+    const validated: MetasConfig = {
+      global: Math.max(1000, Number(newMetas.global) || DEFAULT_METAS.global),
+      DOCA: Math.max(0, Number(newMetas.DOCA) || 0),
+      STAR: Math.max(0, Number(newMetas.STAR) || 0),
+      CASA: Math.max(0, Number(newMetas.CASA) || 0),
+      THERM: Math.max(0, Number(newMetas.THERM) || 0),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
+    window.dispatchEvent(new CustomEvent('metas-updated', { detail: validated }));
   } catch (err) {
     console.error('Erro ao salvar metas:', err);
   }

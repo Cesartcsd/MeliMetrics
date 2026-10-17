@@ -1,4 +1,3 @@
-'use client';
 import { useState } from 'react';
 import { 
   Download, 
@@ -15,8 +14,12 @@ import {
   RotateCcw,
   Receipt,
   Layers,
-  ArrowDownRight
+  ArrowDownRight,
+  FolderTree,
+  Package
 } from 'lucide-react';
+import { AnaliseCategorias } from './AnaliseCategorias';
+import { CurvaAbcProdutos } from './CurvaAbcProdutos';
 import { 
   LineChart, 
   Line, 
@@ -28,8 +31,25 @@ import {
 } from 'recharts';
 import { dashboardData } from '@/lib/mockData';
 
+import { formatCurrency, formatPercentage } from '@/lib/formatUtils';
+import { exportToCSV } from '@/lib/exportUtils';
+
 type ClasseABC = 'A' | 'B' | 'C';
 type Periodo = 'hoje' | '7dias' | 'mes';
+
+export interface DREDetalhadaItem {
+  valor: number;
+  percentual: number;
+  detalhe: string;
+}
+
+export interface DREDetalhada {
+  comissoes: DREDetalhadaItem;
+  freteGratis: DREDetalhadaItem;
+  taxasFixas: DREDetalhadaItem;
+  devolucoesImpacto: DREDetalhadaItem;
+  lucroLimpo: DREDetalhadaItem;
+}
 
 const metricasPorPeriodo: Record<Periodo, {
   label: string;
@@ -38,13 +58,7 @@ const metricasPorPeriodo: Record<Periodo, {
     margemReal: { value: string; badge: string; subtext: string };
     custosML: { value: string; badge: string; subtext: string };
     ticketMedio: { value: string; badge: string; subtext: string };
-    dreDetalhada: {
-      comissoes: string;
-      freteGratis: string;
-      taxasFixas: string;
-      devolucoesImpacto: string;
-      lucroLimpo: string;
-    };
+    dreDetalhada: DREDetalhada;
   };
   rentabilidadeEvolucao: Array<{ date: string; gmv: number; margem: number; taxas: number }>;
   chartSubtitle: string;
@@ -57,11 +71,11 @@ const metricasPorPeriodo: Record<Periodo, {
       custosML: { value: 'R$ 5.799,60', badge: '27.0% GMV', subtext: 'Comissão ML 16.2% • Fretes Full 10.8%' },
       ticketMedio: { value: 'R$ 188,40', badge: '114 pedidos', subtext: '114 pedidos finalizados hoje' },
       dreDetalhada: {
-        comissoes: 'R$ 3.480,00 (16.2%)',
-        freteGratis: 'R$ 2.319,60 (10.8%)',
-        taxasFixas: 'R$ 627,00 (R$ 5,50/un)',
-        devolucoesImpacto: 'R$ 420,00 (1.9%)',
-        lucroLimpo: 'R$ 4.832,90 (22.5%)'
+        comissoes: { valor: 3480, percentual: 16.2, detalhe: 'Tarifas e comissões de anúncio' },
+        freteGratis: { valor: 2319.60, percentual: 10.8, detalhe: 'Subsídio obrigatório > R$79' },
+        taxasFixas: { valor: 627, percentual: 2.9, detalhe: 'R$ 5,50 por unid. vendida' },
+        devolucoesImpacto: { valor: 420, percentual: 1.9, detalhe: 'Frete reverso & quebras' },
+        lucroLimpo: { valor: 4832.90, percentual: 22.5, detalhe: 'Margem líquida no bolso' }
       }
     },
     rentabilidadeEvolucao: [
@@ -83,11 +97,11 @@ const metricasPorPeriodo: Record<Periodo, {
       custosML: { value: 'R$ 34.362,00', badge: '27.6% GMV', subtext: 'Comissão ML 16.5% • Fretes Full/Flex 11.1%' },
       ticketMedio: { value: 'R$ 186,10', badge: '669 pedidos', subtext: '669 pedidos finalizados na semana' },
       dreDetalhada: {
-        comissoes: 'R$ 20.542,50 (16.5%)',
-        freteGratis: 'R$ 13.819,50 (11.1%)',
-        taxasFixas: 'R$ 3.679,50 (R$ 5,50/un)',
-        devolucoesImpacto: 'R$ 2.490,00 (2.0%)',
-        lucroLimpo: 'R$ 28.635,00 (23.0%)'
+        comissoes: { valor: 20542.50, percentual: 16.5, detalhe: 'Tarifas e comissões da semana' },
+        freteGratis: { valor: 13819.50, percentual: 11.1, detalhe: 'Subsídio obrigatório > R$79' },
+        taxasFixas: { valor: 3679.50, percentual: 2.9, detalhe: 'R$ 5,50 por unid. vendida' },
+        devolucoesImpacto: { valor: 2490, percentual: 2.0, detalhe: 'Frete reverso & quebras' },
+        lucroLimpo: { valor: 28635, percentual: 23.0, detalhe: 'Margem líquida no bolso' }
       }
     },
     rentabilidadeEvolucao: [
@@ -109,11 +123,11 @@ const metricasPorPeriodo: Record<Periodo, {
       custosML: { value: 'R$ 94.620,00', badge: '27.6% GMV', subtext: 'Comissão ML 16.5% • Fretes Full/Flex 11.1%' },
       ticketMedio: { value: 'R$ 186,10', badge: '1.842 pedidos', subtext: '1.842 pedidos finalizados no período' },
       dreDetalhada: {
-        comissoes: 'R$ 56.570,25 (16.5%)',
-        freteGratis: 'R$ 38.049,75 (11.1%)',
-        taxasFixas: 'R$ 10.131,00 (R$ 5,50/un)',
-        devolucoesImpacto: 'R$ 6.857,00 (2.0%)',
-        lucroLimpo: 'R$ 78.855,50 (23.0%)'
+        comissoes: { valor: 56570.25, percentual: 16.5, detalhe: 'Tarifas e comissões do mês' },
+        freteGratis: { valor: 38049.75, percentual: 11.1, detalhe: 'Subsídio obrigatório > R$79' },
+        taxasFixas: { valor: 10131, percentual: 2.9, detalhe: 'R$ 5,50 por unid. vendida' },
+        devolucoesImpacto: { valor: 6857, percentual: 2.0, detalhe: 'Frete reverso & quebras' },
+        lucroLimpo: { valor: 78855.50, percentual: 23.0, detalhe: 'Margem líquida no bolso' }
       }
     },
     rentabilidadeEvolucao: [
@@ -140,6 +154,9 @@ export default function VendasMetricas({ onNavigate }: VendasMetricasProps) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [selectedStore, setSelectedStore] = useState('Todas as Lojas');
   const [exportNotice, setExportNotice] = useState<string | null>(null);
+  const [subTab, setSubTab] = useState<'dre' | 'categorias' | 'produtos'>('dre');
+  const [selectedCatForProducts, setSelectedCatForProducts] = useState<string | undefined>(undefined);
+  const [selectedSubcatForProducts, setSelectedSubcatForProducts] = useState<string | undefined>(undefined);
 
   const { curvaABC } = dashboardData.vendasMetricas;
   const currentMetricas = metricasPorPeriodo[periodo];
@@ -153,32 +170,19 @@ export default function VendasMetricas({ onNavigate }: VendasMetricasProps) {
   };
 
   const handleExport = () => {
-    // Generate simple CSV download for DRE
-    const rows = [
-      ['Data', 'GMV Faturado', 'Margem Liquida', 'Taxas ML'],
-      ...rentabilidadeEvolucao.map(d => [d.date, d.gmv.toString(), d.margem.toString(), d.taxas.toString()])
-    ];
-    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map(e => e.join(',')).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `DRE_MeliMetrics_${periodo}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    setExportNotice('Relatório DRE exportado com sucesso!');
+    exportToCSV(
+      `DRE_MeliMetrics_${periodo}`,
+      ['Data / Período', 'Faturamento GMV (R$)', 'Margem Líquida Real (R$)', 'Custos e Taxas ML (R$)'],
+      rentabilidadeEvolucao.map(d => [d.date, d.gmv, d.margem, d.taxas])
+    );
+    setExportNotice('Relatório DRE exportado em CSV formatado com sucesso!');
     setTimeout(() => setExportNotice(null), 3000);
   };
 
-  const currentProducts = curvaABC[activeClasse].filter(item => 
+  const currentProducts = (curvaABC[activeClasse] || []).filter(item => 
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     item.sku.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(value);
-  };
 
   return (
     <div className="space-y-6 fade-in pb-10">
@@ -306,7 +310,48 @@ export default function VendasMetricas({ onNavigate }: VendasMetricasProps) {
         </div>
       )}
 
-      {/* Top 4 KPI Cards */}
+      {/* Sub-tab Navigation */}
+      <div className="flex border-b border-border-subtle gap-2">
+        <button
+          onClick={() => setSubTab('dre')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-medium border-b-2 transition-all cursor-pointer ${
+            subTab === 'dre'
+              ? 'border-accent-blue text-accent-blue font-semibold'
+              : 'border-transparent text-text-muted hover:text-text-main hover:border-border-subtle'
+          }`}
+        >
+          <Receipt size={14} />
+          <span>Visão Geral & DRE Consolidada</span>
+        </button>
+
+        <button
+          onClick={() => setSubTab('categorias')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-medium border-b-2 transition-all cursor-pointer ${
+            subTab === 'categorias'
+              ? 'border-accent-blue text-accent-blue font-semibold'
+              : 'border-transparent text-text-muted hover:text-text-main hover:border-border-subtle'
+          }`}
+        >
+          <FolderTree size={14} />
+          <span>Desempenho por Categorias ML</span>
+        </button>
+
+        <button
+          onClick={() => setSubTab('produtos')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-medium border-b-2 transition-all cursor-pointer ${
+            subTab === 'produtos'
+              ? 'border-accent-blue text-accent-blue font-semibold'
+              : 'border-transparent text-text-muted hover:text-text-main hover:border-border-subtle'
+          }`}
+        >
+          <Package size={14} />
+          <span>Produtos & Curva ABC</span>
+        </button>
+      </div>
+
+      {subTab === 'dre' && (
+        <div className="space-y-6">
+          {/* Top 4 KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: GMV */}
         <div className="bg-bg-surface border border-border-subtle rounded-xl p-5 relative overflow-hidden flex flex-col justify-between">
@@ -383,13 +428,13 @@ export default function VendasMetricas({ onNavigate }: VendasMetricasProps) {
               </div>
             </div>
             <div className="text-2xl lg:text-3xl font-heading font-bold text-text-main tracking-tight font-mono">
-              {kpis.dreDetalhada.freteGratis.split(' ')[0]} {kpis.dreDetalhada.freteGratis.split(' ')[1]}
+              {formatCurrency(kpis.dreDetalhada.freteGratis.valor)}
             </div>
           </div>
           <div className="mt-4 pt-3 border-t border-border-subtle/60 flex items-center justify-between text-xs">
-            <span className="text-text-muted truncate mr-2">Devoluções: {kpis.dreDetalhada.devolucoesImpacto}</span>
+            <span className="text-text-muted truncate mr-2">Devoluções: {formatCurrency(kpis.dreDetalhada.devolucoesImpacto.valor)}</span>
             <span className="font-mono font-medium text-status-amber bg-status-amber/10 px-2 py-0.5 rounded border border-status-amber/20 shrink-0">
-              11.1% GMV
+              {formatPercentage(kpis.dreDetalhada.freteGratis.percentual)} GMV
             </span>
           </div>
         </div>
@@ -408,7 +453,7 @@ export default function VendasMetricas({ onNavigate }: VendasMetricasProps) {
             </p>
           </div>
           <span className="text-xs font-mono px-2.5 py-1 rounded bg-bg-base border border-border-subtle text-status-green self-start sm:self-auto font-medium">
-            Lucro Limpo Consolidado: {kpis.dreDetalhada.lucroLimpo}
+            Lucro Limpo Consolidado: {formatCurrency(kpis.dreDetalhada.lucroLimpo.valor)} ({formatPercentage(kpis.dreDetalhada.lucroLimpo.percentual)})
           </span>
         </div>
 
@@ -416,14 +461,14 @@ export default function VendasMetricas({ onNavigate }: VendasMetricasProps) {
           {/* Comissões ML */}
           <div className="p-3 rounded-lg bg-bg-base/70 border border-border-subtle/60">
             <div className="flex items-center justify-between text-xs text-text-muted mb-1">
-              <span>Comissões ML (16.5%)</span>
+              <span>Comissões ML ({formatPercentage(kpis.dreDetalhada.comissoes.percentual)})</span>
               <ArrowDownRight size={13} className="text-status-red" />
             </div>
             <div className="text-base font-bold font-mono text-status-red">
-              - {kpis.dreDetalhada.comissoes.split(' ')[0]} {kpis.dreDetalhada.comissoes.split(' ')[1]}
+              - {formatCurrency(kpis.dreDetalhada.comissoes.valor)}
             </div>
             <div className="text-[11px] text-text-muted mt-1 font-mono">
-              {kpis.dreDetalhada.comissoes.split(' ')[2] || 'Tarifas de anúncio'}
+              {kpis.dreDetalhada.comissoes.detalhe}
             </div>
           </div>
 
@@ -434,10 +479,10 @@ export default function VendasMetricas({ onNavigate }: VendasMetricasProps) {
               <Truck size={13} className="text-status-amber" />
             </div>
             <div className="text-base font-bold font-mono text-status-amber">
-              - {kpis.dreDetalhada.freteGratis.split(' ')[0]} {kpis.dreDetalhada.freteGratis.split(' ')[1]}
+              - {formatCurrency(kpis.dreDetalhada.freteGratis.valor)}
             </div>
             <div className="text-[11px] text-text-muted mt-1 font-mono">
-              {kpis.dreDetalhada.freteGratis.split(' ')[2] || 'Subsídio vendedor'}
+              {formatPercentage(kpis.dreDetalhada.freteGratis.percentual)} • {kpis.dreDetalhada.freteGratis.detalhe}
             </div>
           </div>
 
@@ -448,10 +493,10 @@ export default function VendasMetricas({ onNavigate }: VendasMetricasProps) {
               <Layers size={13} className="text-text-muted" />
             </div>
             <div className="text-base font-bold font-mono text-text-main">
-              - {kpis.dreDetalhada.taxasFixas.split(' ')[0]} {kpis.dreDetalhada.taxasFixas.split(' ')[1]}
+              - {formatCurrency(kpis.dreDetalhada.taxasFixas.valor)}
             </div>
             <div className="text-[11px] text-text-muted mt-1 font-mono">
-              R$ 5,50 a R$ 6,00 por unid.
+              {kpis.dreDetalhada.taxasFixas.detalhe}
             </div>
           </div>
 
@@ -462,10 +507,10 @@ export default function VendasMetricas({ onNavigate }: VendasMetricasProps) {
               <RotateCcw size={13} className="text-status-red" />
             </div>
             <div className="text-base font-bold font-mono text-status-red">
-              - {kpis.dreDetalhada.devolucoesImpacto.split(' ')[0]} {kpis.dreDetalhada.devolucoesImpacto.split(' ')[1]}
+              - {formatCurrency(kpis.dreDetalhada.devolucoesImpacto.valor)}
             </div>
             <div className="text-[11px] text-text-muted mt-1 font-mono">
-              Frete reverso & quebras
+              {formatPercentage(kpis.dreDetalhada.devolucoesImpacto.percentual)} • {kpis.dreDetalhada.devolucoesImpacto.detalhe}
             </div>
           </div>
 
@@ -476,10 +521,10 @@ export default function VendasMetricas({ onNavigate }: VendasMetricasProps) {
               <Check size={13} />
             </div>
             <div className="text-base font-bold font-mono text-status-green">
-              {kpis.dreDetalhada.lucroLimpo.split(' ')[0]} {kpis.dreDetalhada.lucroLimpo.split(' ')[1]}
+              {formatCurrency(kpis.dreDetalhada.lucroLimpo.valor)}
             </div>
             <div className="text-[11px] text-status-green/80 mt-1 font-mono">
-              {kpis.dreDetalhada.lucroLimpo.split(' ')[2] || 'Margem no bolso'}
+              {formatPercentage(kpis.dreDetalhada.lucroLimpo.percentual)} margem no bolso
             </div>
           </div>
         </div>
@@ -751,6 +796,27 @@ export default function VendasMetricas({ onNavigate }: VendasMetricasProps) {
           </div>
         </div>
       </div>
+      </div>
+      )}
+
+      {subTab === 'categorias' && (
+        <AnaliseCategorias
+          selectedStore={selectedStore}
+          onSelectCategoryForProducts={(catId, subcatId) => {
+            setSelectedCatForProducts(catId);
+            setSelectedSubcatForProducts(subcatId);
+            setSubTab('produtos');
+          }}
+        />
+      )}
+
+      {subTab === 'produtos' && (
+        <CurvaAbcProdutos
+          selectedStore={selectedStore}
+          initialCategoriaId={selectedCatForProducts}
+          initialSubcategoriaId={selectedSubcatForProducts}
+        />
+      )}
     </div>
   );
 }

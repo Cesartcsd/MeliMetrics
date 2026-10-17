@@ -1,4 +1,3 @@
-'use client';
 import { useState } from 'react';
 import { 
   Key, 
@@ -50,11 +49,17 @@ export default function ConfiguracoesApi({ onNavigate }: ConfiguracoesApiProps) 
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const copyToClipboard = (text: string, fieldName: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedField(fieldName);
-    setTimeout(() => setCopiedField(null), 2000);
-    showToast(`${fieldName} copiado para a área de transferência!`);
+  const copyToClipboard = async (text: string, fieldName: string) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      }
+      setCopiedField(fieldName);
+      setTimeout(() => setCopiedField(null), 2000);
+      showToast(`${fieldName} copiado para a área de transferência!`);
+    } catch {
+      showToast(`Não foi possível copiar automaticamente o ${fieldName}.`);
+    }
   };
 
   const handleTestAll = () => {
