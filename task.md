@@ -2,8 +2,8 @@
 
 > **Documento-fonte:** `escopo_mvp.md` v1.1  
 > **Data do baseline:** 17/10/2026  
-> **Estado:** Fase 1 implementada parcialmente; integração real P0 não iniciada; G1 aguarda CI protegido  
-> **Próxima tarefa desbloqueada:** `BASE-006 — Executar o workflow no GitHub e ativar branch protection`  
+> **Estado:** Fase 1 concluída; integração real P0 não iniciada; PR aguardando revisão  
+> **Próxima tarefa desbloqueada:** `F2-001 — Iniciar autenticação, organizações e RLS`  
 > **Meta de liberação:** piloto técnico controlado, sem SLA, para uma organização, quatro contas Mercado Livre e até cinco usuários
 
 ## 1. Objetivo e limites
@@ -306,15 +306,15 @@ Gate de dados reais → piloto: 1 conta → 4 contas → catálogo completo
 - **Evidência:** `pipeline/pyproject.toml`, `pipeline/uv.lock`, FastAPI `/health`; `uv sync --frozen`, Ruff, mypy e 3 testes aprovados.
 - **Risco:** acoplamento precoce entre framework e regras financeiras.
 
-## [ ] BASE-006 — Criar CI obrigatório
+## [x] BASE-006 — Criar CI obrigatório
 
 - **Prioridade:** P0
-- **Estado:** preparado; aguardando execução no GitHub e branch protection administrada.
+- **Estado:** concluído em 18/10/2026; CI remoto verde e branch protection ativa na `main`.
 - **Depende de:** `BASE-003`, `BASE-004`, `BASE-005`
 - **Entrega:** jobs paralelos para frontend, banco/Edge, Python e segurança; versões das ações fixadas, permissões mínimas e cancelamento de execuções obsoletas.
 - **Aceite:** CI usa `npm ci`, ambiente Python travado e Supabase CLI fixada; não exige token ML real; checks obrigatórios protegem a branch principal; artefatos nunca incluem dump, payload ou segredo.
 - **Testes:** workflow em branch de teste, inclusive falha intencional controlada.
-- **Evidência:** `.github/workflows/ci.yml` versionado com ações fixadas por SHA; execução remota ainda não comprovada.
+- **Evidência:** `.github/workflows/ci.yml`; PR [#1](https://github.com/Cesartcsd/MeliMetrics/pull/1); run [39124216298](https://github.com/Cesartcsd/MeliMetrics/actions/runs/39124216298) com `frontend`, `supabase`, `pipeline` e `security` aprovados; proteção da `main` exige os quatro checks e uma aprovação.
 - **Risco:** merge de código não verificável ou exposição de artefatos sensíveis.
 
 ## [ ] BASE-007 — Documentar setup e decisões arquiteturais
@@ -339,15 +339,15 @@ Gate de dados reais → piloto: 1 conta → 4 contas → catálogo completo
 - **Evidência:** `docs/security/threat-model.md` com STRIDE, controles, responsáveis, verificações e parâmetros HMAC/nonce/rotação.
 - **Risco:** descobrir tarde que a arquitetura expõe segredo, tenant ou endpoint interno.
 
-## [ ] G1 — Aprovar fundação reproduzível
+## [x] G1 — Aprovar fundação reproduzível
 
 - **Prioridade:** P0
-- **Estado:** bloqueado por BASE-006
+- **Estado:** GO em 18/10/2026; PR aberto para revisão, sem merge automático.
 - **Depende de:** `BASE-001` a `BASE-007`, `SEC-000`
 - **Entrega:** decisão formal sobre reprodutibilidade, segurança-base e prontidão do ambiente sintético.
 - **Aceite:** clone limpo executa verificação completa; worktree permanece limpo; scanner não encontra segredos.
 - **Testes:** repetir instalação, reset, suítes mínimas e scanner em clone limpo.
-- **Evidência:** `docs/foundation/G1-local.md`; frontend, pipeline, npm ci isolado, scanner e Supabase local aprovados; CI ainda sem execução/proteção de branch.
+- **Evidência:** `docs/foundation/G1-local.md`; `npm run verify` local aprovado; run remoto [39124216298](https://github.com/Cesartcsd/MeliMetrics/actions/runs/39124216298) verde; branch protection da `main` verificada via API com checks obrigatórios, aprovação obrigatória, resolução de conversas e force-push/deleção bloqueados.
 - **Risco:** avançar com ambiente não reproduzível ou controles de segurança sem proprietário.
 
 ---
