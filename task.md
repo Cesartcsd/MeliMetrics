@@ -317,15 +317,15 @@ Gate de dados reais → piloto: 1 conta → 4 contas → catálogo completo
 - **Evidência:** `.github/workflows/ci.yml`; PR [#1](https://github.com/Cesartcsd/MeliMetrics/pull/1); run [39124216298](https://github.com/Cesartcsd/MeliMetrics/actions/runs/39124216298) com `frontend`, `supabase`, `pipeline` e `security` aprovados; proteção da `main` exige os quatro checks e uma aprovação.
 - **Risco:** merge de código não verificável ou exposição de artefatos sensíveis.
 
-## [ ] BASE-007 — Documentar setup e decisões arquiteturais
+## [x] BASE-007 — Documentar setup e decisões arquiteturais
 
 - **Prioridade:** P0
-- **Estado:** concluído localmente em 18/10/2026; publicação do CI ainda pendente.
+- **Estado:** concluído em 18/10/2026; documentação validada localmente e CI remoto verde.
 - **Depende de:** `BASE-002`, `BASE-006`
 - **Entrega:** README, arquitetura, política de segredos, comandos, ambientes, ADRs das decisões críticas e versionamento de `escopo_mvp.md`/`task.md` como documentos de produto e execução.
 - **Aceite:** pessoa sem contexto configura ambiente local somente com a documentação e dados sintéticos.
 - **Testes:** walkthrough em clone limpo.
-- **Evidência:** `README.md`, `docs/architecture.md`, `docs/adr/001-003`, `docs/security/threat-model.md` e `docs/foundation/G1-local.md`; walkthrough local com reset e dump sintético em `D:\MeliMetrics\supabase-data`.
+- **Evidência:** `README.md`, `docs/architecture.md`, `docs/adr/001-003`, `docs/security/threat-model.md` e `docs/foundation/G1-local.md`; walkthrough local com reset e dump sintético em `D:\MeliMetrics\supabase-data`; CI remoto no run [39124216298](https://github.com/Cesartcsd/MeliMetrics/actions/runs/39124216298).
 - **Risco:** conhecimento operacional ficar implícito ou concentrado em uma pessoa.
 
 ## [x] SEC-000 — Modelar ameaças antes das integrações
