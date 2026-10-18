@@ -2,5 +2,5 @@
   "name": "MeliMetrics PRO",
   "description": "Dashboard analítico para operações de e-commerce com foco em inteligência de vendas.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }

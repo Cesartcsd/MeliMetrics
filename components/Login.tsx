@@ -22,9 +22,9 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
         <div className="flex justify-center text-accent-blue mb-4">
           <Activity size={48} />
         </div>
-        <h2 className="text-center text-3xl font-heading font-bold text-text-main">
+        <h1 className="text-center text-3xl font-heading font-bold text-text-main">
           MeliMetrics <span className="text-xs bg-accent-blue text-white px-2 py-1 rounded ml-1 align-middle">PRO</span>
-        </h2>
+        </h1>
         <p className="mt-2 text-center text-sm text-text-muted">
           Inteligência de Vendas e Analytics
         </p>
@@ -40,11 +40,13 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
           
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-text-main">
+              <label htmlFor="login-email" className="block text-sm font-medium text-text-main">
                 Email / Usuário
               </label>
               <div className="mt-1">
                 <input
+                  id="login-email"
+                  autoComplete="username"
                   type="email"
                   required
                   value={email}
@@ -56,11 +58,13 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-main">
+              <label htmlFor="login-password" className="block text-sm font-medium text-text-main">
                 Senha
               </label>
               <div className="mt-1">
                 <input
+                  id="login-password"
+                  autoComplete="current-password"
                   type="password"
                   required
                   value={password}
@@ -70,6 +74,8 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
                 />
               </div>
             </div>
+
+            {error && <p role="alert" className="text-sm text-status-amber" aria-live="assertive">{error}</p>}
 
             <div>
               <button
